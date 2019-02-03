@@ -1,0 +1,796 @@
+
+---------------run the test in Hbase with ----s3---3Xm32xlargeDisableBC---1FL73C9TAELV7---
+[
+	{"Classification":"hbase-site", 
+
+	 "Properties":{
+			"hbase.bucketcache.size":"0.0",
+			"hfile.block.cache.size":"0.0"
+			}, 
+		"Configurations":[]
+	}
+]
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-1FL73C9TAELV7 --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-1FL73C9TAELV7 --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-1FL73C9TAELV7 --steps Type=CUSTOM_JAR,Name="loaddata10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000000","3Xm32xlargeDisableBC","s3","a"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+
+
+aws emr add-steps --cluster-id j-1FL73C9TAELV7 --steps Type=CUSTOM_JAR,Name="rundataloadc10000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000","c","3Xm32xlargeDisableBC","s3","zipfian","10000000"]
+
+
+
+---------------run the test in Hbase with ----hdfs---3Xm32xlargeDisableBC---1JXUEGMZUDU2B---
+[
+	{"Classification":"hbase-site", 
+
+	 "Properties":{
+			"hbase.bucketcache.size":"0.0",
+			"hfile.block.cache.size":"0.0"
+			}, 
+		"Configurations":[]
+	}
+]
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-1JXUEGMZUDU2B --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-1JXUEGMZUDU2B --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-1JXUEGMZUDU2B --steps Type=CUSTOM_JAR,Name="loaddata10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000000","3Xm32xlargeDisableBC","hdfs","a"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+
+
+aws emr add-steps --cluster-id j-1JXUEGMZUDU2B --steps Type=CUSTOM_JAR,Name="rundataloadc10000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000","c","3Xm32xlargeDisableBC","hdfs","zipfian","10000000"]
+
+
+
+
+
+---------------run the test in Hbase with ----s3---3Xm32xlargeEnableBC---144CQF7ZS24KR----------zipfian or uniform--------------------------
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+144CQF7ZS24KR
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="loaddata10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000000","3Xm32xlargeEnableBC","s3","a"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+
+
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc1000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+
+//----------以下数据无参考价值--------------
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100001","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100002",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100002","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100003",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100003","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100004",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100004","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100005",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100005","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100006",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100006","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100007",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100007","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100008",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100008","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100009",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100009","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100010",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100010","c","3Xm32xlargeEnableBC","s3","zipfian"]
+
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100001","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100002",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100002","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100003",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100003","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100004",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100004","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100005",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100005","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100006",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100006","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100007",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100007","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100008",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100008","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100009",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100009","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc100010",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100010","c","3Xm32xlargeEnableBC","s3","uniform"]
+
+
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10001","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10002",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10002","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10003",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10003","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10004",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10004","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10005",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10005","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10006",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10006","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10007",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10007","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10008",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10008","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10009",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10009","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10010",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10010","c","3Xm32xlargeEnableBC","s3","zipfian"]
+
+
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10001","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10002",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10002","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10003",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10003","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10004",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10004","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10005",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10005","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10006",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10006","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10007",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10007","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10008",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10008","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10009",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10009","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10010",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10010","c","3Xm32xlargeEnableBC","s3","uniform"]
+//----------以上数据无参考价值--------------
+
+
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc20000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","20000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc40000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","40000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc80000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","80000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc160000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","160000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc320000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","320000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc640000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","640000","c","3Xm32xlargeEnableBC","s3","zipfian"]
+
+
+
+
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc10000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc20000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","20000","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc40000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","40000","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc80000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","80000","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc160000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","160000","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc320000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","320000","c","3Xm32xlargeEnableBC","s3","uniform"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadc640000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","640000","c","3Xm32xlargeEnableBC","s3","uniform"]
+
+
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadd1000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000000","d","3Xm32xlargeEnableBC","s3","latest"]
+
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadd100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","d","3Xm32xlargeEnableBC","s3","latest"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadd100001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100001","d","3Xm32xlargeEnableBC","s3","latest"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadd100002",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100002","d","3Xm32xlargeEnableBC","s3","latest"]
+aws emr add-steps --cluster-id j-144CQF7ZS24KR --steps Type=CUSTOM_JAR,Name="rundataloadd100003",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100003","d","3Xm32xlargeEnableBC","s3","latest"]
+
+
+
+
+---------------run the test in Hbase with ----hdfs---3Xm32xlargeEnableBC---31APQQI0O0IW0---------------------------------------------------------
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="loaddata10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000000","3Xm32xlargeEnableBC","hdfs","a"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+
+
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc1000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+
+
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc10000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc20000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","20000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc40000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","40000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc80000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","80000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc160000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","160000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc320000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","320000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc640000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","640000","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc10000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000","c","3Xm32xlargeEnableBC","hdfs","uniform"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc20000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","20000","c","3Xm32xlargeEnableBC","hdfs","uniform"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc40000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","40000","c","3Xm32xlargeEnableBC","hdfs","uniform"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc80000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","80000","c","3Xm32xlargeEnableBC","hdfs","uniform"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc160000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","160000","c","3Xm32xlargeEnableBC","hdfs","uniform"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc320000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","320000","c","3Xm32xlargeEnableBC","hdfs","uniform"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc640000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","640000","c","3Xm32xlargeEnableBC","hdfs","uniform"]
+
+
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc1000001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000001","c","3Xm32xlargeEnableBC","hdfs","zipfian"]
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadc1000001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000001","c","3Xm32xlargeEnableBC","hdfs","uniform"]
+
+
+aws emr add-steps --cluster-id j-31APQQI0O0IW0 --steps Type=CUSTOM_JAR,Name="rundataloadd100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","d","3Xm32xlargeEnableBC","hdfs","latest"]
+
+
+
+---------------run the test in Hbase with ----s3---Test3Xm32xlargeEnableBC---D2U7OYDZI81R----------zipfian or uniform--------------------------
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="loaddata10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000000","Test3Xm32xlargeEnableBC","s3","a"]
+
+
+//clear_block_cache
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="clearBlockCache",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/clearblockcache.sh"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+//the 6th is the record number
+
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","c","Test3Xm32xlargeEnableBC","s3","zipfian","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_1000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000000","c","Test3Xm32xlargeEnableBC","s3","zipfian","10000000"]
+
+clear_block_cache 'usertable'
+
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000000","c","Test3Xm32xlargeEnableBC","s3","zipfian","10000000"]
+
+clear_block_cache 'usertable'
+
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_20000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","20000000","c","Test3Xm32xlargeEnableBC","s3","zipfian","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_30000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","30000000","c","Test3Xm32xlargeEnableBC","s3","zipfian","10000000"]
+
+
+
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","c","Test3Xm32xlargeEnableBC","s3","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_1000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000000","c","Test3Xm32xlargeEnableBC","s3","uniform","10000000"]
+
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000000","c","Test3Xm32xlargeEnableBC","s3","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_20000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","20000000","c","Test3Xm32xlargeEnableBC","s3","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_30000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","30000000","c","Test3Xm32xlargeEnableBC","s3","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_D_latest_100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","d","Test3Xm32xlargeEnableBC","s3","latest","10000000"]
+
+clear_block_cache 'usertable'
+
+//inserted 1497330
+aws emr add-steps --cluster-id j-D2U7OYDZI81R --steps Type=CUSTOM_JAR,Name="rundataload_D_latest_30000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","30000000","d","Test3Xm32xlargeEnableBC","s3","latest","10004899"]
+
+
+---------------run the test in Hbase with ----hdfs---Test3Xm32xlargeEnableBC---HGCHVS8Z8N6M----------zipfian or uniform--------------------------
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+//you can also create table using step
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="createtable",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/createtable.sh"]
+
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="loaddata10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000000","Test3Xm32xlargeEnableBC","hdfs","a"]
+
+
+//clear_block_cache 'usertable'
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="clearBlockCache",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/clearblockcache.sh"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+//the 6th is the record number
+
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","c","Test3Xm32xlargeEnableBC","hdfs","zipfian","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_1000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000000","c","Test3Xm32xlargeEnableBC","hdfs","zipfian","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000000","c","Test3Xm32xlargeEnableBC","hdfs","zipfian","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_20000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","20000000","c","Test3Xm32xlargeEnableBC","hdfs","zipfian","10000000"]
+
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_zipfian_30000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","30000000","c","Test3Xm32xlargeEnableBC","hdfs","zipfian","10000000"]
+
+
+
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","c","Test3Xm32xlargeEnableBC","hdfs","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_1000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","1000000","c","Test3Xm32xlargeEnableBC","hdfs","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000000","c","Test3Xm32xlargeEnableBC","hdfs","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_20000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","20000000","c","Test3Xm32xlargeEnableBC","hdfs","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_30000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","30000000","c","Test3Xm32xlargeEnableBC","hdfs","uniform","10000000"]
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_D_latest_100000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","100000","d","Test3Xm32xlargeEnableBC","hdfs","latest","10000000"]
+
+clear_block_cache 'usertable'
+
+//inserted 1500527
+aws emr add-steps --cluster-id j-HGCHVS8Z8N6M --steps Type=CUSTOM_JAR,Name="rundataload_D_latest_30000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","30000000","d","Test3Xm32xlargeEnableBC","hdfs","latest","10004899"]
+
+
+
+---------------run the test in Hbase with ----s3---Test3Xm32xlargeSmallBC---1M02QP0UPQKI6----------uniform--------------------------
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+//you can also create table using step
+aws emr add-steps --cluster-id j-1M02QP0UPQKI6 --steps Type=CUSTOM_JAR,Name="createtable",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/createtable.sh"]
+
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-1M02QP0UPQKI6 --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-1M02QP0UPQKI6 --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-1M02QP0UPQKI6 --steps Type=CUSTOM_JAR,Name="loaddata10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000000","Test3Xm32xlargeSmallBC","s3","a"]
+
+
+//clear_block_cache
+aws emr add-steps --cluster-id j-1M02QP0UPQKI6 --steps Type=CUSTOM_JAR,Name="clearBlockCache",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/clearblockcache.sh"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+//the 6th is the record number
+
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-1M02QP0UPQKI6 --steps Type=CUSTOM_JAR,Name="rundataload_C_uniform_10000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","10000000","c","Test3Xm32xlargeSmallBC","s3","uniform","10000000"]
+
+
+
+---------------run the test in Hbase with ----s3---smallmemstore---17VTOF9PFJ7AT----------uniform--------------------------
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+//you can also create table using step
+aws emr add-steps --cluster-id j-17VTOF9PFJ7AT --steps Type=CUSTOM_JAR,Name="createtable",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/createtable.sh"]
+
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-17VTOF9PFJ7AT --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-17VTOF9PFJ7AT --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-17VTOF9PFJ7AT --steps Type=CUSTOM_JAR,Name="loaddata10000001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000001","Test3Xm32xlargeEnableBC","s3","a"]
+
+
+//clear_block_cache
+aws emr add-steps --cluster-id j-17VTOF9PFJ7AT --steps Type=CUSTOM_JAR,Name="clearBlockCache",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/clearblockcache.sh"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+//the 6th is the record number
+
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-17VTOF9PFJ7AT --steps Type=CUSTOM_JAR,Name="rundataload_D_uniform_30000000",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","30000000","d","Test3Xm32xlargeEnableBC","s3","uniform","10000001"]
+
+
+
+
+
+---------------run the test in Hbase with ----s3---bigmemstore---29UX5RAKPF4Y----------uniform--------------------------
+
+//create table
+# HBase recommends (10 * number of regionservers)
+hbase(main):001:0> n_splits = 30
+hbase(main):002:0> create 'usertable', 'family', {SPLITS => (1..n_splits).map {|i| "user#{1000+i*(9999-1000)/n_splits}"}}
+//you can also create table using step
+aws emr add-steps --cluster-id j-29UX5RAKPF4Y --steps Type=CUSTOM_JAR,Name="createtable",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/createtable.sh"]
+
+
+//in your laptop
+cd /Users/hxy/work/product/emr/hbase/shell
+aws s3 cp ./ s3://emrdevelop/hbase/code/ --recursive
+
+//install Ycsb
+aws emr add-steps --cluster-id j-29UX5RAKPF4Y --steps Type=CUSTOM_JAR,Name="copyYcsbFromS3",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/copyYcsbFromS3.sh"]
+
+//move /etc/hbase/conf to /home/hadoop/hbase/conf
+//***after moving, you need to update the config file***, add the following property
+//<property> <name>hbase.dynamic.jars.dir</name> <value>files:/tmp/</value> </property>
+aws emr add-steps --cluster-id j-29UX5RAKPF4Y --steps Type=CUSTOM_JAR,Name="mvHbaseConfFile",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/mvHbaseConfFile.sh"]
+
+
+
+//load data with parameters, 
+//the 1st param is the count of the items, 
+//the 2nd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 3rd is the storage type, s3 or hdfs
+//the 4th is the workload type
+
+//load 10000000 data
+aws emr add-steps --cluster-id j-29UX5RAKPF4Y --steps Type=CUSTOM_JAR,Name="loaddata10000002",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/loaddata.sh","10000002","Test3Xm32xlargeEnableBC","s3","a"]
+
+
+//clear_block_cache
+aws emr add-steps --cluster-id j-29UX5RAKPF4Y --steps Type=CUSTOM_JAR,Name="clearBlockCache",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/clearblockcache.sh"]
+
+
+//run data with parameters, 
+//the 1st param is the count of operations, 
+//the 2nd is the load type (a-f), 
+//the 3rd is the dir of the log file for this Hbase config.  will be used in the ec2 and s3 log as dir. also represent the cluster type.
+//the 4th is the storage type, s3 or hdfs
+//the 5th is the distribution type
+//the 6th is the record number
+
+
+clear_block_cache 'usertable'
+
+aws emr add-steps --cluster-id j-29UX5RAKPF4Y --steps Type=CUSTOM_JAR,Name="rundataload_D_uniform_30000001",Jar=s3://emrdevelop/script-runner.jar,\
+Args=["s3://emrdevelop/hbase/code/rundata.sh","30000001","d","Test3Xm32xlargeEnableBC","s3","uniform","10000002"]
